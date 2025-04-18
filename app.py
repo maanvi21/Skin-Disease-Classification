@@ -7,8 +7,6 @@ app = Flask(__name__)
 @app.route('/', methods=['GET', 'POST'])  # This is the missing part
 def index():
     return render_template('index.html')  # This should match a file in the templates folder
-@app.route('/predict', methods=['POST','GET'])
-@app.route('/predict', methods=['POST'])
 @app.route('/predict', methods=['POST'])
 def predict():
     if 'image' not in request.files:
