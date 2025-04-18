@@ -1,7 +1,8 @@
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import json
+from keras.models import Sequential
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from keras.preprocessing.image import ImageDataGenerator
 
 # Directory setup
 train_dir = './train'
@@ -52,3 +53,7 @@ model.fit(
 
 # Save
 model.save('skin_disease_model.h5')
+
+# Save class labels mapping
+with open('class_indices.json', 'w') as f:
+    json.dump(train_data.class_indices, f)

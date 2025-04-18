@@ -1,6 +1,7 @@
 import tensorflow as tf
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import json
+from keras.models import load_model
+from keras.preprocessing.image import ImageDataGenerator
 
 # Directory setup
 train_dir = './train'
@@ -32,8 +33,11 @@ model = load_model('skin_disease_model.h5')
 model.fit(
     train_data,
     validation_data=test_data,
-    epochs=3  # Train for 3 more epochs
+    epochs=5  # Train for 3 more epochs
 )
 
 # Save
 model.save('skin_disease_model.h5')
+# # Save class labels mapping
+# with open('class_indices.json', 'w') as f:
+#     json.dump(train_data.class_indices, f)
