@@ -2,6 +2,8 @@ from flask import Flask, request, render_template, jsonify
 from predict import predict_image
 from PIL import Image
 import io
+import base64
+from io import BytesIO
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB max upload
@@ -22,11 +24,24 @@ def predict():
     try:
         image = Image.open(io.BytesIO(file.read())).convert('RGB')
         result = predict_image(image)
-        return jsonify(result)
+
+        # Convert heatmap (numpy) to base64 PNG
+        heatmap_pil = Image.fromarray(result["heatmap"])
+        buffered = BytesIO()
+        heatmap_pil.save(buffered, format="PNG")
+        heatmap_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+        response = {
+            "prediction": result["prediction"],
+            "confidence": result["confidence"],
+            "message": result["message"],
+            "heatmap": f"data:image/png;base64,{heatmap_base64}"
+        }
+
+        return jsonify(response)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 if __name__ == '__main__':
     print("🚀 Skin Disease Classification Web App Started!")

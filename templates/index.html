@@ -4,14 +4,70 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skin Disease Predictor</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 30px; background: #f4f4f4; }
+        h1 { color: #333; }
+        .container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
+        input[type="file"] { margin: 15px 0; }
+        button { padding: 12px 25px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #preview { max-width: 300px; margin: 15px auto; display: none; border: 2px solid #ddd; border-radius: 8px; }
+        #result { margin-top: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px; }
+        #heatmap { max-width: 400px; margin: 15px auto; border: 3px solid #28a745; border-radius: 8px; }
+    </style>
 </head>
 <body>
-    <h1>Hello, welcome to the Skin Disease Detector!</h1>
+    <div class="container">
+        <h1>Skin Disease Detector</h1>
+        <p>Upload a clear image of the skin lesion</p>
 
-    <form  action="/predict" method="post" enctype="multipart/form-data">
-        <label for="image">Upload a skin image:</label><br><br>
-        <input type="file" name="image" accept="image/*" required><br><br>
-        <button type="submit">Predict</button>
-    </form>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" id="image" name="image" accept="image/*" required><br><br>
+            <img id="preview" alt="Preview"><br>
+            <button type="button" onclick="uploadImage()">Predict</button>
+        </form>
+
+        <div id="result" style="display: none;">
+            <h2 id="prediction"></h2>
+            <p id="confidence"></p>
+            <p id="message" style="font-weight: bold;"></p>
+            <h3>Grad-CAM Explanation (Highlighted Region)</h3>
+            <img id="heatmap" alt="Grad-CAM Heatmap">
+        </div>
+    </div>
+
+    <script>
+        // Image preview
+        document.getElementById('image').addEventListener('change', function(e) {
+            const preview = document.getElementById('preview');
+            preview.src = URL.createObjectURL(e.target.files[0]);
+            preview.style.display = 'block';
+        });
+
+        async function uploadImage() {
+            const formData = new FormData();
+            const fileInput = document.getElementById('image');
+            formData.append('image', fileInput.files[0]);
+
+            const response = await fetch('/predict', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            // Show results
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('prediction').innerText = `Prediction: ${data.prediction}`;
+            document.getElementById('confidence').innerText = `Confidence: ${data.confidence}%`;
+            document.getElementById('message').innerText = data.message;
+            document.getElementById('heatmap').src = data.heatmap;
+        }
+    </script>
 </body>
 </html>
