@@ -28,15 +28,28 @@ A deep learning-based web application that classifies skin diseases from images 
 
 ## 🧪 Classes
 
-- Actinic keratosis  
-- Atopic Dermatitis  
-- Benign keratosis  
-- Dermatofibroma  
-- Melanocytic nevus  
-- Melanoma  
-- Squamous cell carcinoma  
-- Tinea / Ringworm / Candidiasis  
-- Vascular lesion  
+-Acne: 593
+-Actinic_Keratosis: 748
+-Benign_tumors: 1093
+-Bullous: 504
+-Candidiasis: 248
+-DrugEruption: 547
+-Eczema: 1010
+-Infestations_Bites: 524
+-Lichen: 553
+-Lupus: 311
+-Moles: 361
+-Psoriasis: 820
+-Rosacea: 254
+-Seborrh_Keratoses: 455
+-SkinCancer: 693
+-Sun_Sunlight_Damage: 312
+-Tinea: 923
+-Unknown_Normal: 1651
+-Vascular_Tumors: 543
+-Vasculitis: 461
+-Vitiligo: 714
+-Warts: 580
 
 ---
 
@@ -76,6 +89,12 @@ Grad-CAM helps:
 -Improve trust in predictions
 -Make the model interpretable
 
+## 📊 Model Performance
+
+- Training Accuracy: 95.27%
+- Validation Accuracy: 86.74%
+
+
 ### 📊 Sample Output
 ```
 {
@@ -84,3 +103,4 @@ Grad-CAM helps:
   "message": "⚠️ High risk - Please consult a dermatologist immediately."
 }
 ```
+
