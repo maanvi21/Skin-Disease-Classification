@@ -79,7 +79,7 @@ NOTE- The model is very slightly overfir due to the small size of the dataset si
 ```
 
 ### 🚀 Future Improvements
--📈 Larger & More Diverse Dataset
+- 📈 Larger & More Diverse Dataset
 Expand the dataset with more high-quality, clinically verified images across different skin tones, age groups, and conditions to improve generalization and reduce overfitting.
--🗂️ Patient History Integration
+- 🗂️ Patient History Integration
 Incorporate patient metadata (age, symptoms, history) to improve prediction accuracy through a hybrid model (image + structured data).
