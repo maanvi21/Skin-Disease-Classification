@@ -26,33 +26,6 @@ A deep learning-based web application that classifies skin diseases from images 
 
 ---
 
-## 🧪 Classes
-
--Acne: 593
--Actinic_Keratosis: 748
--Benign_tumors: 1093
--Bullous: 504
--Candidiasis: 248
--DrugEruption: 547
--Eczema: 1010
--Infestations_Bites: 524
--Lichen: 553
--Lupus: 311
--Moles: 361
--Psoriasis: 820
--Rosacea: 254
--Seborrh_Keratoses: 455
--SkinCancer: 693
--Sun_Sunlight_Damage: 312
--Tinea: 923
--Unknown_Normal: 1651
--Vascular_Tumors: 543
--Vasculitis: 461
--Vitiligo: 714
--Warts: 580
-
----
-
 ## ⚙️ Installation
 
 ### 1. Clone the repository
@@ -94,6 +67,7 @@ Grad-CAM helps:
 - Training Accuracy: 95.27%
 - Validation Accuracy: 86.74%
 
+NOTE- The model is very slightly overfir due to the small size of the dataset since finding correctly classified images in the medical domain is very difficult.
 
 ### 📊 Sample Output
 ```
@@ -104,3 +78,8 @@ Grad-CAM helps:
 }
 ```
 
+### 🚀 Future Improvements
+-📈 Larger & More Diverse Dataset
+Expand the dataset with more high-quality, clinically verified images across different skin tones, age groups, and conditions to improve generalization and reduce overfitting.
+-🗂️ Patient History Integration
+Incorporate patient metadata (age, symptoms, history) to improve prediction accuracy through a hybrid model (image + structured data).
