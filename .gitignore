@@ -1,4 +1,5 @@
 train/
 test/
 venv/
-data/
+data/train/
+data/val/
