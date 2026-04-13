@@ -1,234 +1,99 @@
-# 🩺 Skin Disease Classification with MobileNetV2
+# 🩺 Skin Disease Classification & Intelligence
 
-> Deep learning-based multi-class skin disease classifier using transfer learning on 22 disease categories.
-
----
-
-## 🏆 Final Results
-
-| Metric | Value |
-|--------|-------|
-| **Best Validation Accuracy** | **62.74%** |
-| Architecture | MobileNetV2 (Transfer Learning) |
-| Number of Classes | 22 |
-| Hardware | NVIDIA RTX 4050 Laptop GPU |
-
-> ⚠️ **Note:** 62.74% accuracy on a 22-class imbalanced dataset is a strong result. Random chance baseline = ~4.5%. The model significantly outperforms random guessing and handles severe class imbalance through weighted sampling and loss techniques.
-![alt text](image.png)
+> Deep learning-based multi-class skin disease classifier comparing multiple architectures (MobileNet, EfficientNet, and DenseNet) on 22 disease categories, fully packaged into a dynamic Flask Web App with Grad-CAM interpretability.
 
 ---
 
-## 📌 Project Overview
+## 🏆 Final Results & Architecture Comparison
 
-This project tackles multi-class skin disease classification using a fine-tuned MobileNetV2 backbone. The dataset consists of **22 skin disease categories** with significant class imbalance — a common real-world challenge in medical imaging.
-![alt text](image-1.png)
-The pipeline addresses imbalance through both **sampling-level** (WeightedRandomSampler) and **loss-level** (Weighted CrossEntropyLoss) corrections, combined with **gradual fine-tuning** of the pretrained backbone for stable convergence.
+In this project, we explicitly compared three powerful computer vision architectures. Classifying 22 highly-imbalanced skin diseases is a challenging task (random chance baseline = ~4.5%).
 
-**Why MobileNetV2?**
-- Lightweight and efficient — well-suited for GPU-constrained environments
-- Strong ImageNet pretraining — transfers effectively to dermatology images
-- Depthwise separable convolutions reduce overfitting on small medical datasets
+| Architecture | Validation Accuracy | Characteristics |
+|--------------|---------------------|-----------------|
+| **DenseNet121** (Final Choice) | **62.23%** | Very strong results. Chosen as the final model due to its dense feature maps, which map perfectly with `Grad-CAM` for creating pristine explainable visualizations for the web app. |
+| **MobileNetV2** | **62.74%** | Extremely lightweight and fast. It converged quickly, but MobileNet's depthwise separable convolutions made precise pixel-level Grad-CAM explanations slightly less defined than DenseNet. |
+| **EfficientNetB2** | **Poor / Did not converge well** | Struggled to converge effectively on this specific imbalanced dataset setup despite its theoretical power. |
 
----
+> ⚠️ **Note:** Achieving over 62% accuracy across 22 fine-grained dermatological classes significantly outperforms random guessing. This DenseNet model achieved this result with a relatively short training run (**25 initial epochs + 15 fine-tuning epochs**), leaving us highly open to extending the training in the future to push accuracy even further!
 
-## ⚙️ Techniques Used
-
-### 1. Transfer Learning with MobileNetV2
-A MobileNetV2 backbone pretrained on ImageNet is used as a feature extractor. The classifier head is replaced with a custom fully-connected layer for 22 classes.
-
-### 2. Handling Class Imbalance
-
-**WeightedRandomSampler**
-Each training sample is assigned a weight inversely proportional to its class frequency. Rarer classes are sampled more often, preventing the model from ignoring minority classes.
-
-**Weighted CrossEntropyLoss**
-Class weights are passed directly to the loss function. Even if a minority class sample is seen, its gradient contribution is amplified — doubly correcting for imbalance.
-
-### 3. Gradual Unfreezing
-Instead of fine-tuning the entire backbone at once (which can destroy pretrained features), the **last 8 blocks** of MobileNetV2 are gradually unfrozen during training. Earlier blocks retain low-level ImageNet features; later blocks adapt to skin texture patterns.
-
-### 4. Differential Learning Rates
-| Component | Learning Rate |
-|-----------|--------------|
-| Classifier head | `1e-3` (higher — learning from scratch) |
-| Unfrozen backbone blocks | `1e-5` (very low — fine-tuning carefully) |
-
-This prevents catastrophic forgetting while allowing domain adaptation.
-
-### 5. Optimizer & Scheduler
-- **Optimizer:** Adam — adaptive learning rates per parameter
-- **Scheduler:** `ReduceLROnPlateau` — halves the LR when validation loss plateaus, enabling finer convergence
-
-### 6. Data Augmentation
-Applied only to training data to improve generalization:
-
-```python
-transforms.RandomHorizontalFlip()
-transforms.RandomRotation(degrees=15)
-transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2)
-```
-
-These simulate real-world variation in lighting, camera angle, and skin tone rendering.
+![Web App Interface](image.png)
 
 ---
 
-## 📁 Project Structure
+## ⚖️ Solving Severe Class Imbalance
 
-```
-skin-disease-classification/
-│
-├── train_mobilenet.py        # Main training script (from scratch)
-├── resume_training.py        # Resume from a saved checkpoint
-├── best_mobilenet_skin.pth   # Best model weights (saved by val accuracy)
-│
-├── data/
-│   ├── train/                # Training images (organized by class folder)
-│   └── val/                  # Validation images (organized by class folder)
-│
-├── models/
-│   └── best_mobilenet_skin.pth
-│
-├── logs/                     # Training logs (optional)
-│
-└── README.md
-```
+Real-world medical datasets suffer heavily from class imbalance (e.g., thousands of benign moles, but very few rare vasculitis cases). If untreated, the model will just predict the majority class. We solved this doubly through sampling and loss manipulations:
 
-> **Expected folder structure for data:**
-> ```
-> data/train/class_name_1/image1.jpg
-> data/train/class_name_2/image2.jpg
-> ...
-> ```
+### 1. Sampling-Level: `WeightedRandomSampler`
+Each training sample is assigned a weight inversely proportional to its class frequency. Rarer classes are mathematically sampled more often during data-loading, forcing the model to look at rare diseases just as often as common ones.
+
+### 2. Loss-Level: Weighted `CrossEntropyLoss`
+Class weights are passed directly to the loss function. Even if a minority class sample is seen, its gradient contribution to the learning pipeline is artificially amplified, heavily punishing the model if it misclassifies a rare skin disease.
 
 ---
 
-## 🛠️ Installation & Requirements
+## ⚙️ Core Methodologies
 
-### Prerequisites
-- Python 3.8+
-- CUDA-compatible GPU (recommended: 6GB+ VRAM)
+### 1. Fine-Tuning & Unfreezing Strategy
+Rather than training from scratch, we load `ImageNet` weights. We freeze the core convolutional network and train just the classifier layer.
+For **DenseNet121**, after the classifier plateaued at `~50%` accuracy, we **globally unfroze the entire network** (`requires_grad = True`) and continued training on a micro learning rate (`1e-5`). This aggressive fine-tuning is what pushed the validation accuracy up to `62.23%`.
 
-### Install Dependencies
+### 2. Aggressive Data Augmentation
+Applied dynamically via `torchvision.transforms` to artificially expand the dataset and prevent memorization:
+- Random Horizontal & Vertical Flips (`p=0.5`)
+- Aggressive Rotations (`45 degrees`)
+- Color Jitter (Brightness/Contrast variance) to simulate different lighting conditions and skin tones.
 
-```bash
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-pip install numpy pillow scikit-learn tqdm matplotlib
-```
+### 3. Optimizer & Schedulers
+- **Optimizer:** Adam
+- **Scheduler:** `ReduceLROnPlateau` (halves the LR when validation loss plateaus to enable precise convergence around local minima).
 
-Or install from requirements file:
+---
 
+## 🌐 The Diagnostic Web App
+
+This repository includes a stunning, completely integrated Flask web application. It bridges the gap between the raw backend PyTorch tensors and the end-user.
+
+### Features
+1. **Dynamic Glassmorphism Interface**: A highly responsive drag-and-drop UI written in Vanilla CSS and JS.
+2. **Real-time Inference**: Forwards the uploaded image to the DenseNet model and extracts raw confidence probabilities.
+3. **Grad-CAM Integration**: Extracts activation gradients from `model.features[-1]` in DenseNet121, highlighting the exact pixels in the image that caused the model to predict the specific disease. 
+4. **Intelligent Banners**: If a high-risk lesion (e.g., Melanoma, Squamous Cell Carcinoma) is detected, the UI instantly pulses a high-risk red alert urging immediate medical consultation.
+
+---
+
+## 🚀 How to Run the Project
+
+### 1. Setup Environment
 ```bash
 pip install -r requirements.txt
 ```
 
-### requirements.txt
-
-```
-torch>=2.0.0
-torchvision>=0.15.0
-numpy>=1.24.0
-pillow>=9.0.0
-scikit-learn>=1.2.0
-tqdm>=4.65.0
-matplotlib>=3.7.0
-```
-
----
-
-## 🚀 How to Train / Resume Training
-
-### Train from Scratch
-
+### 2. Start the Web App Server
 ```bash
-python train_mobilenet.py \
-  --data_dir ./data \
-  --epochs 50 \
-  --batch_size 32 \
-  --lr 1e-3 \
-  --backbone_lr 1e-5 \
-  --unfreeze_blocks 8
+python app.py
+# Or if using the virtual environment:
+venv\Scripts\python app.py
 ```
+The application will safely spin up on `http://127.0.0.1:5000`. 
 
-### Resume Training from Checkpoint
-
+### 3. Train Base Models
 ```bash
-python resume_training.py \
-  --checkpoint best_mobilenet_skin.pth \
-  --data_dir ./data \
-  --epochs 30 \
-  --batch_size 32
+python train_densenet.py
+# Or for MobileNet
+python train_mobilenet.py
 ```
 
-### Key Arguments
-
-| Argument | Default | Description |
-|----------|---------|-------------|
-| `--data_dir` | `./data` | Path to dataset root |
-| `--epochs` | `50` | Total training epochs |
-| `--batch_size` | `32` | Batch size |
-| `--lr` | `1e-3` | Classifier head learning rate |
-| `--backbone_lr` | `1e-5` | Backbone fine-tuning learning rate |
-| `--unfreeze_blocks` | `8` | Number of MobileNetV2 blocks to unfreeze |
-| `--checkpoint` | `None` | Path to `.pth` file to resume from |
+### 4. Aggressively Fine-Tune / Resume Training
+If you want to unfreeze models and squeeze extra accuracy:
+```bash
+python resume_train_densenet.py
+```
 
 ---
 
-## 💡 Training Tips & Best Practices
+## 🖥️ Hardware & Structure
+- **Trained heavily on:** NVIDIA RTX 4050 Laptop GPU (6GB VRAM)
+- Built with standard `torch`, `torchvision`, and `pytorch-grad-cam`.
 
-**Start frozen, then unfreeze gradually**
-Train the classifier head for a few epochs first before unfreezing backbone blocks. This prevents early instability.
-
-**Keep backbone LR very low**
-`1e-5` or lower for backbone layers. Too high and you'll destroy pretrained ImageNet features within the first epoch.
-
-**Monitor validation accuracy, not just loss**
-With class imbalance, training loss can look good while the model ignores minority classes. Track per-class precision/recall alongside overall accuracy.
-
-**Augmentation should match real-world variance**
-Avoid aggressive augmentation (e.g., extreme crops, heavy blur) that wouldn't appear in clinical photos.
-
-**Use early stopping**
-Save the best checkpoint by validation accuracy, not final epoch. Overfitting is common with small medical datasets.
-
-**Batch size trade-off**
-Smaller batches (16–32) work better with WeightedRandomSampler as they increase effective sampling diversity per epoch.
-
----
-
-## 🔮 Future Improvements
-
-| Improvement | Expected Impact |
-|-------------|----------------|
-| **EfficientNetV2 / ConvNeXt backbone** | Likely +3–5% accuracy |
-| **Mixup / CutMix augmentation** | Better generalization on minority classes |
-| **Test-Time Augmentation (TTA)** | +1–2% on validation |
-| **Focal Loss** instead of Weighted CE | Better focus on hard examples |
-| **Two-stage training** (freeze → gradual unfreeze with LR warmup) | More stable fine-tuning |
-| **Larger input resolution** (384×384) | Capture fine skin texture better |
-| **Ensemble of 3+ models** | +4–6% accuracy typical for medical imaging |
-| **Self-supervised pretraining** on unlabeled skin images | Better domain-specific features |
-| **Per-class threshold tuning** | Better recall on rare disease classes |
-
----
-
-## 🖥️ Hardware & Acknowledgments
-
-### Hardware
-- **GPU:** NVIDIA RTX 4050 Laptop GPU (6GB VRAM)
-- **Training Time:** ~2–4 hours per 50 epochs depending on dataset size
-
-### Acknowledgments
-- [MobileNetV2 Paper](https://arxiv.org/abs/1801.04381) — Sandler et al., 2018
-- [PyTorch](https://pytorch.org/) — deep learning framework
-- [torchvision](https://pytorch.org/vision/) — pretrained models and transforms
-- Dataset sourced from public dermatology benchmarks (ISIC, DermNet, or similar)
-
----
-
-## 📄 License
-
-This project is for research and educational purposes. If using clinical data, ensure compliance with applicable data privacy regulations (HIPAA, GDPR, etc.).
-
----
-
-*Built with PyTorch · MobileNetV2 · Transfer Learning · RTX 4050*
+*Built for educational and research exploration in bridging AI with deep-dermatology workflows.*
