@@ -5,7 +5,7 @@
 ---
 
 ## Final Results & Architecture Comparison
-
+![Architecture Diagram](diagram.png)
 Three computer vision architectures were benchmarked. Classifying 22 highly imbalanced skin diseases is a challenging task (random chance baseline is approximately 4.5%).
 
 | Architecture | Validation Accuracy | Characteristics |
